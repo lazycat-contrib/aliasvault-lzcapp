@@ -11,10 +11,9 @@ application:
       backend: file:///lzcapp/pkg/content/licenses/
     - location: /
       backend: http://aliasvault:80/
-
 services:
   aliasvault:
-    # upstream: docker.io/aliasvault/aliasvault:0.31.2
+    # upstream: aliasvault/aliasvault:0.31.2
     image: docker.1ms.run/aliasvault/aliasvault:0.31.2
     # 首启 seed 管理员密码：镜像内置 aliasvault-cli.sh hash-password 生成
     # PBKDF2 哈希，写入 ${SECRETS_PATH}/admin_password_hash（HASH|TIMESTAMP 格式），
@@ -50,7 +49,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 120s
-
 usage: |
   AliasVault 是一个隐私优先的密码与邮箱别名管理器（浏览器插件 + Web 端），
   数据端到端加密后存放在自托管的服务端，本包使用官方 all-in-one 镜像
