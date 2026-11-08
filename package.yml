@@ -1,0 +1,18 @@
+package: community.lazycat.app.aliasvault
+name: AliasVault
+version: 0.31.2
+description: "Privacy-first password and alias manager: encrypted vault, email alias generation, built-in admin panel (all-in-one image)."
+min_os_version: "1.5.0"
+homepage: https://aliasvault.net
+author: lanedirt
+license: AGPL-3.0
+permissions:
+  required:
+    - net.internet
+locales:
+  zh:
+    name: AliasVault
+    description: "隐私优先的密码与别名管理器：加密保险库、邮箱别名生成、内置管理面板（all-in-one 镜像）。"
+  en:
+    name: AliasVault
+    description: "Privacy-first password and alias manager: encrypted vault, email alias generation, built-in admin panel (all-in-one image)."

@@ -1,0 +1,70 @@
+application:
+  subdomain: aliasvault
+  multi_instance: false
+  # 客户端支持自助注册账号（PUBLIC_REGISTRATION_ENABLED=true），
+  # 管理后台（/admin）管理员密码由部署参数随机注入，
+  # 按 papra/mattermost 判例加 public_path，由应用自身登录页鉴权。
+  public_path:
+    - /
+  upstreams:
+    - location: /package-licenses/
+      backend: file:///lzcapp/pkg/content/licenses/
+    - location: /
+      backend: http://aliasvault:80/
+
+services:
+  aliasvault:
+    # upstream: docker.io/aliasvault/aliasvault:0.31.2
+    image: docker.1ms.run/aliasvault/aliasvault:0.31.2
+    # 首启 seed 管理员密码：镜像内置 aliasvault-cli.sh hash-password 生成
+    # PBKDF2 哈希，写入 ${SECRETS_PATH}/admin_password_hash（HASH|TIMESTAMP 格式），
+    # Admin 的 StartupTasks 启动时同步进数据库（含建号）；随后交给 s6 原入口 /init。
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        SECRETS_DIR="${SECRETS_PATH:-/secrets}"
+        HASH_FILE="$SECRETS_DIR/admin_password_hash"
+        if [ -n "$AV_ADMIN_PASSWORD" ] && [ ! -f "$HASH_FILE" ]; then
+          mkdir -p "$SECRETS_DIR"
+          HASH="$(/usr/local/bin/aliasvault-cli.sh hash-password "$AV_ADMIN_PASSWORD" 2>/dev/null || true)"
+          if [ -n "$HASH" ]; then
+            printf "%s|%s\n" "$HASH" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$HASH_FILE"
+            chmod 600 "$HASH_FILE"
+          fi
+        fi
+        exec /init
+    environment:
+      - TZ=Asia/Shanghai
+      - FORCE_HTTPS_REDIRECT=false
+      - PUBLIC_REGISTRATION_ENABLED=true
+      - AV_ADMIN_PASSWORD={{PASSWORD_av_admin_pw}}
+    binds:
+      - /lzcapp/var/database:/database
+      - /lzcapp/var/secrets:/secrets
+      - /lzcapp/var/certificates:/certificates
+      - /lzcapp/var/logs:/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1/api"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
+usage: |
+  AliasVault 是一个隐私优先的密码与邮箱别名管理器（浏览器插件 + Web 端），
+  数据端到端加密后存放在自托管的服务端，本包使用官方 all-in-one 镜像
+  （内置 PostgreSQL、API、客户端与管理面板）。
+
+  使用方法：
+  1. 打开应用，在登录页注册你的个人账号（首个用户为普通用户，保管库彼此独立）。
+  2. 管理面板位于应用地址下的 /admin 路径，管理员用户名 admin，
+     密码为部署参数中预置的随机值，登录后请妥善保管。
+  3. 所有内部密钥（JWT、数据库口令等）已自动生成并持久化在 /lzcapp/var/secrets，
+     容器重建后依然有效。
+  4. 数据库与证书分别持久化在 /lzcapp/var/database 与 /lzcapp/var/certificates。
+  5. SMTP 邮件端口（25/587）未对外暴露，邮箱别名仅生成规则，收信功能不可用。
+
+  说明：
+  - 本包未做实机验证，功能以官方文档为准：https://docs.aliasvault.net/
+  - 按 AGPL-3.0 许可分发，许可证全文见应用地址 /package-licenses/ 路径。

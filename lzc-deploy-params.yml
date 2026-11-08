@@ -1,0 +1,17 @@
+params:
+  - id: av_admin_pw
+    type: secret
+    name: "管理员密码"
+    description: "AliasVault 管理后台（/admin）的管理员密码，已预置随机值，请在登录后妥善保管。"
+    default_value: "Kt7RmQxW2pZv9sNb"
+    optional: false
+
+locales:
+  zh:
+    av_admin_pw:
+      name: "管理员密码"
+      description: "AliasVault 管理后台（/admin）的管理员密码，已预置随机值，请在登录后妥善保管。"
+  en:
+    av_admin_pw:
+      name: "Admin password"
+      description: "Admin panel (/admin) password, pre-filled with a random value. Keep it safe."
